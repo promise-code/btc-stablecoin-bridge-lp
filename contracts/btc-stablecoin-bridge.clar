@@ -42,3 +42,20 @@
     btc-provided: uint,
     stable-provided: uint
 })
+
+
+;; Private Functions
+(define-private (transfer-balance (amount uint) (sender principal) (recipient principal))
+    (let (
+        (sender-balance (default-to u0 (map-get? balances sender)))
+        (recipient-balance (default-to u0 (map-get? balances recipient)))
+    )
+    (if (>= sender-balance amount)
+        (begin
+            (map-set balances sender (- sender-balance amount))
+            (map-set balances recipient (+ recipient-balance amount))
+            (ok true)
+        )
+        ERR-INSUFFICIENT-BALANCE
+    ))
+)
