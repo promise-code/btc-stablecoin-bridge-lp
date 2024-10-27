@@ -234,3 +234,13 @@
     )
     (ok (calculate-collateral-ratio (get btc-locked vault) (get stablecoin-minted vault))))
 )
+
+
+(define-read-only (get-pool-details)
+    {
+        btc-balance: (var-get pool-btc-balance),
+        stable-balance: (var-get pool-stable-balance),
+        total-supply: (var-get total-supply),
+        oracle-price: (var-get oracle-price)
+    }
+)
