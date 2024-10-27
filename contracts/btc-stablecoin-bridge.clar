@@ -106,3 +106,23 @@
         (ok true)
     )
 )
+
+(define-public (deposit-collateral (btc-amount uint))
+    (let (
+        (sender-vault (default-to {
+            btc-locked: u0,
+            stablecoin-minted: u0,
+            last-update-height: block-height
+        } (map-get? collateral-vaults tx-sender)))
+    )
+    (begin
+        (asserts! (>= btc-amount MINIMUM-DEPOSIT) ERR-BELOW-MINIMUM)
+        (try! (transfer-balance btc-amount tx-sender (as-contract tx-sender)))
+        (map-set collateral-vaults tx-sender {
+            btc-locked: (+ btc-amount (get btc-locked sender-vault)),
+            stablecoin-minted: (get stablecoin-minted sender-vault),
+            last-update-height: block-height
+        })
+        (ok true)
+    ))
+)
