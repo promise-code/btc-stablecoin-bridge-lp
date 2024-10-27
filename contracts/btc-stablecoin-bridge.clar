@@ -59,3 +59,11 @@
         ERR-INSUFFICIENT-BALANCE
     ))
 )
+
+(define-private (calculate-collateral-ratio (btc-amount uint) (stablecoin-amount uint))
+    (let (
+        (btc-value-usd (* btc-amount (var-get oracle-price)))
+        (collateral-ratio (/ (* btc-value-usd u100) stablecoin-amount))
+    )
+    collateral-ratio)
+)
