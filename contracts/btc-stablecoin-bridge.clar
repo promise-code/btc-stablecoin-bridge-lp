@@ -35,3 +35,10 @@
     stablecoin-minted: uint,
     last-update-height: uint
 })
+
+
+(define-map liquidity-providers principal {
+    pool-tokens: uint,
+    btc-provided: uint,
+    stable-provided: uint
+})
