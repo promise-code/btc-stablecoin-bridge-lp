@@ -11,7 +11,6 @@
 (define-constant ERR-ALREADY-INITIALIZED (err u1008))
 (define-constant ERR-NOT-INITIALIZED (err u1009))
 
-
 ;; Constants
 (define-constant CONTRACT-OWNER tx-sender)
 (define-constant MINIMUM-COLLATERAL-RATIO u150) ;; 150%
@@ -35,14 +34,11 @@
     stablecoin-minted: uint,
     last-update-height: uint
 })
-
-
 (define-map liquidity-providers principal {
     pool-tokens: uint,
     btc-provided: uint,
     stable-provided: uint
 })
-
 
 ;; Private Functions
 (define-private (transfer-balance (amount uint) (sender principal) (recipient principal))
@@ -164,7 +160,6 @@
     ))
 )
 
-
 (define-public (add-liquidity (btc-amount uint) (stable-amount uint))
     (let (
         (pool-btc (var-get pool-btc-balance))
@@ -193,7 +188,6 @@
         (ok lp-tokens)
     ))
 )
-
 
 (define-public (remove-liquidity (lp-tokens uint))
     (let (
@@ -235,7 +229,6 @@
     (ok (calculate-collateral-ratio (get btc-locked vault) (get stablecoin-minted vault))))
 )
 
-
 (define-read-only (get-pool-details)
     {
         btc-balance: (var-get pool-btc-balance),
@@ -243,4 +236,8 @@
         total-supply: (var-get total-supply),
         oracle-price: (var-get oracle-price)
     }
+)
+
+(define-read-only (get-lp-details (provider principal))
+    (map-get? liquidity-providers provider)
 )
