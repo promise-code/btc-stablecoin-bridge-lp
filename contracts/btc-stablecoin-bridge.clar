@@ -126,3 +126,22 @@
         (ok true)
     ))
 )
+
+(define-public (mint-stablecoin (amount uint))
+    (let (
+        (vault (unwrap! (map-get? collateral-vaults tx-sender) ERR-NOT-INITIALIZED))
+        (current-stable-balance (default-to u0 (map-get? stablecoin-balances tx-sender)))
+        (new-stable-amount (+ (get stablecoin-minted vault) amount))
+    )
+    (begin
+        (asserts! (check-collateral-ratio tx-sender) ERR-INSUFFICIENT-COLLATERAL)
+        (map-set collateral-vaults tx-sender {
+            btc-locked: (get btc-locked vault),
+            stablecoin-minted: new-stable-amount,
+            last-update-height: block-height
+        })
+        (map-set stablecoin-balances tx-sender (+ current-stable-balance amount))
+        (var-set total-supply (+ (var-get total-supply) amount))
+        (ok true)
+    ))
+)
