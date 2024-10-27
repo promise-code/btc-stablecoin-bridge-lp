@@ -87,3 +87,14 @@
         (/ (* btc-amount total-supply-sqrt) pool-btc)
     ))
 )
+
+;; Public Functions
+(define-public (initialize (initial-price uint))
+    (begin
+        (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-NOT-AUTHORIZED)
+        (asserts! (not (var-get contract-initialized)) ERR-ALREADY-INITIALIZED)
+        (var-set oracle-price initial-price)
+        (var-set contract-initialized true)
+        (ok true)
+    )
+)
