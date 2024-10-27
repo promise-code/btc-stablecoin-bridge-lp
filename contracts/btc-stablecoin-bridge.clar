@@ -10,3 +10,12 @@
 (define-constant ERR-ABOVE-MAXIMUM (err u1007))
 (define-constant ERR-ALREADY-INITIALIZED (err u1008))
 (define-constant ERR-NOT-INITIALIZED (err u1009))
+
+
+;; Constants
+(define-constant CONTRACT-OWNER tx-sender)
+(define-constant MINIMUM-COLLATERAL-RATIO u150) ;; 150%
+(define-constant LIQUIDATION-RATIO u130) ;; 130%
+(define-constant MINIMUM-DEPOSIT u1000000) ;; 0.01 BTC (in sats)
+(define-constant POOL-FEE-RATE u3) ;; 0.3%
+(define-constant PRECISION u1000000) ;; 6 decimal places
