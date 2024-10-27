@@ -98,3 +98,11 @@
         (ok true)
     )
 )
+
+(define-public (update-price (new-price uint))
+    (begin
+        (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-NOT-AUTHORIZED)
+        (var-set oracle-price new-price)
+        (ok true)
+    )
+)
