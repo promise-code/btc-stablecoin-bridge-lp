@@ -163,3 +163,33 @@
         (ok true)
     ))
 )
+
+
+(define-public (add-liquidity (btc-amount uint) (stable-amount uint))
+    (let (
+        (pool-btc (var-get pool-btc-balance))
+        (pool-stable (var-get pool-stable-balance))
+        (lp-tokens (calculate-lp-tokens btc-amount stable-amount))
+        (provider-data (default-to {
+            pool-tokens: u0,
+            btc-provided: u0,
+            stable-provided: u0
+        } (map-get? liquidity-providers tx-sender)))
+    )
+    (begin
+        (asserts! (> btc-amount u0) ERR-INVALID-AMOUNT)
+        (asserts! (> stable-amount u0) ERR-INVALID-AMOUNT)
+        (try! (transfer-balance btc-amount tx-sender (as-contract tx-sender)))
+        (try! (transfer-balance stable-amount tx-sender (as-contract tx-sender)))
+        
+        (var-set pool-btc-balance (+ pool-btc btc-amount))
+        (var-set pool-stable-balance (+ pool-stable stable-amount))
+        
+        (map-set liquidity-providers tx-sender {
+            pool-tokens: (+ (get pool-tokens provider-data) lp-tokens),
+            btc-provided: (+ (get btc-provided provider-data) btc-amount),
+            stable-provided: (+ (get stable-provided provider-data) stable-amount)
+        })
+        (ok lp-tokens)
+    ))
+)
