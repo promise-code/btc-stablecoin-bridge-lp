@@ -26,3 +26,12 @@
 (define-data-var total-supply uint u0)
 (define-data-var pool-btc-balance uint u0)
 (define-data-var pool-stable-balance uint u0)
+
+;; Data Maps
+(define-map balances principal uint)
+(define-map stablecoin-balances principal uint)
+(define-map collateral-vaults principal {
+    btc-locked: uint,
+    stablecoin-minted: uint,
+    last-update-height: uint
+})
