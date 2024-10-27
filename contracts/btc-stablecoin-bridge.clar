@@ -227,3 +227,10 @@
 (define-read-only (get-vault-details (owner principal))
     (map-get? collateral-vaults owner)
 )
+
+(define-read-only (get-collateral-ratio (owner principal))
+    (let (
+        (vault (unwrap! (map-get? collateral-vaults owner) ERR-NOT-INITIALIZED))
+    )
+    (ok (calculate-collateral-ratio (get btc-locked vault) (get stablecoin-minted vault))))
+)
