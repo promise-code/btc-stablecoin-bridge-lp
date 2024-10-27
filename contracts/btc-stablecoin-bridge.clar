@@ -76,11 +76,20 @@
     (let (
         (pool-btc (var-get pool-btc-balance))
         (pool-stable (var-get pool-stable-balance))
-        (total-supply-sqrt (pow (* pool-btc pool-stable) u0.5))
     )
     (if (is-eq pool-btc u0)
-        (pow (* btc-amount stable-amount) u0.5)
-        (/ (* btc-amount total-supply-sqrt) pool-btc)
+        (sqrt (* btc-amount stable-amount))
+        (/ (* btc-amount (sqrt (* pool-btc pool-stable))) pool-btc)
+    ))
+)
+
+(define-private (sqrt (x uint))
+    (let (
+        (next (+ (/ x u2) u1))
+    )
+    (if (<= x u2)
+        u1
+        next
     ))
 )
 
