@@ -10,6 +10,7 @@
 (define-constant ERR-ABOVE-MAXIMUM (err u1007))
 (define-constant ERR-ALREADY-INITIALIZED (err u1008))
 (define-constant ERR-NOT-INITIALIZED (err u1009))
+(define-constant ERR-INVALID-PRICE (err u1010))
 
 ;; Constants
 (define-constant CONTRACT-OWNER tx-sender)
@@ -18,6 +19,8 @@
 (define-constant MINIMUM-DEPOSIT u1000000) ;; 0.01 BTC (in sats)
 (define-constant POOL-FEE-RATE u3) ;; 0.3%
 (define-constant PRECISION u1000000) ;; 6 decimal places
+(define-constant MAX-PRICE u100000000000) ;; Maximum allowed price (1M USD with 6 decimal precision)
+(define-constant MAX-MINT-AMOUNT u1000000000000) ;; Maximum mint amount (10K USD with 6 decimal precision)
 
 ;; Data Variables
 (define-data-var contract-initialized bool false)
@@ -25,6 +28,14 @@
 (define-data-var total-supply uint u0)
 (define-data-var pool-btc-balance uint u0)
 (define-data-var pool-stable-balance uint u0)
+
+;; Price validation function
+(define-private (validate-price (price uint))
+    (and 
+        (> price u0)
+        (<= price MAX-PRICE)
+    )
+)
 
 ;; Data Maps
 (define-map balances principal uint)
@@ -101,15 +112,18 @@
     (begin
         (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-NOT-AUTHORIZED)
         (asserts! (not (var-get contract-initialized)) ERR-ALREADY-INITIALIZED)
+        (asserts! (validate-price initial-price) ERR-INVALID-PRICE)
         (var-set oracle-price initial-price)
         (var-set contract-initialized true)
         (ok true)
     )
 )
 
+;; Update price with validation
 (define-public (update-price (new-price uint))
     (begin
         (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-NOT-AUTHORIZED)
+        (asserts! (validate-price new-price) ERR-INVALID-PRICE)
         (var-set oracle-price new-price)
         (ok true)
     )
@@ -135,6 +149,7 @@
     ))
 )
 
+;; Mint stablecoin with amount validation
 (define-public (mint-stablecoin (amount uint))
     (let (
         (vault (unwrap! (map-get? collateral-vaults tx-sender) ERR-NOT-INITIALIZED))
@@ -142,15 +157,29 @@
         (new-stable-amount (+ (get stablecoin-minted vault) amount))
     )
     (begin
+        (asserts! (and 
+            (> amount u0)
+            (<= amount MAX-MINT-AMOUNT)
+            (<= (+ (var-get total-supply) amount) (* (var-get pool-btc-balance) (var-get oracle-price)))
+        ) ERR-INVALID-AMOUNT)
         (try! (check-collateral-requirement (get btc-locked vault) new-stable-amount))
+        
+        ;; Update vault
         (map-set collateral-vaults tx-sender {
             btc-locked: (get btc-locked vault),
             stablecoin-minted: new-stable-amount,
             last-update-height: block-height
         })
-        (map-set stablecoin-balances tx-sender (+ current-stable-balance amount))
-        (var-set total-supply (+ (var-get total-supply) amount))
-        (ok true)
+        
+        ;; Update balances safely
+        (let (
+            (new-total-supply (+ (var-get total-supply) amount))
+            (new-user-balance (+ current-stable-balance amount))
+        )
+        (asserts! (<= new-total-supply MAX-MINT-AMOUNT) ERR-ABOVE-MAXIMUM)
+        (map-set stablecoin-balances tx-sender new-user-balance)
+        (var-set total-supply new-total-supply)
+        (ok true))
     ))
 )
 
