@@ -57,19 +57,22 @@
 )
 
 (define-private (calculate-collateral-ratio (btc-amount uint) (stablecoin-amount uint))
-    (let (
-        (btc-value-usd (* btc-amount (var-get oracle-price)))
-        (collateral-ratio (/ (* btc-value-usd u100) stablecoin-amount))
-    )
-    collateral-ratio)
+    (if (is-eq stablecoin-amount u0)
+        PRECISION
+        (let (
+            (btc-value-usd (* btc-amount (var-get oracle-price)))
+            (collateral-ratio (/ (* btc-value-usd u100) stablecoin-amount))
+        )
+        collateral-ratio))
 )
 
-(define-private (check-collateral-ratio (vault-owner principal))
+(define-private (check-collateral-requirement (btc-locked uint) (stablecoin-amount uint))
     (let (
-        (vault (unwrap! (map-get? collateral-vaults vault-owner) ERR-NOT-INITIALIZED))
-        (ratio (calculate-collateral-ratio (get btc-locked vault) (get stablecoin-minted vault)))
+        (ratio (calculate-collateral-ratio btc-locked stablecoin-amount))
     )
-    (>= ratio MINIMUM-COLLATERAL-RATIO))
+    (if (>= ratio MINIMUM-COLLATERAL-RATIO)
+        (ok true)
+        ERR-INSUFFICIENT-COLLATERAL))
 )
 
 (define-private (calculate-lp-tokens (btc-amount uint) (stable-amount uint))
@@ -139,7 +142,7 @@
         (new-stable-amount (+ (get stablecoin-minted vault) amount))
     )
     (begin
-        (asserts! (check-collateral-ratio tx-sender) ERR-INSUFFICIENT-COLLATERAL)
+        (try! (check-collateral-requirement (get btc-locked vault) new-stable-amount))
         (map-set collateral-vaults tx-sender {
             btc-locked: (get btc-locked vault),
             stablecoin-minted: new-stable-amount,
