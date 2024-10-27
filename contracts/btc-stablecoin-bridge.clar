@@ -67,3 +67,12 @@
     )
     collateral-ratio)
 )
+
+(define-private (check-collateral-ratio (vault-owner principal))
+    (let (
+        (vault (unwrap! (map-get? collateral-vaults vault-owner) ERR-NOT-INITIALIZED))
+        (ratio (calculate-collateral-ratio (get btc-locked vault) (get stablecoin-minted vault)))
+    )
+    (>= ratio MINIMUM-COLLATERAL-RATIO))
+)
+
