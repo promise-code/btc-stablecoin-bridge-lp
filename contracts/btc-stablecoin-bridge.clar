@@ -222,3 +222,8 @@
         (ok {btc-returned: btc-return, stable-returned: stable-return})
     ))
 )
+
+;; Read-only functions
+(define-read-only (get-vault-details (owner principal))
+    (map-get? collateral-vaults owner)
+)
